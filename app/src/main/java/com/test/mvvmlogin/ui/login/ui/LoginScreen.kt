@@ -3,7 +3,6 @@ package com.test.mvvmlogin.ui.login.ui
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,13 +19,12 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
-import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -35,21 +33,27 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.test.mvvmlogin.R
 import kotlinx.coroutines.launch
+import androidx.compose.runtime.*
 
 @Composable
-fun LoginScreen() {
+fun LoginScreen(viewModel: LoginViewModel) {
     Box(
         Modifier
             .fillMaxSize()
             .background(Color(0xFFF0EEEF))
     ) {
         // Centra el contenido de la función Login dentro de la pantalla
-        Login(Modifier.align(Alignment.Center))
+        Login(Modifier.align(Alignment.Center), viewModel)
     }
 }
 
 @Composable
-fun Login(modifier: Modifier) {
+fun Login(modifier: Modifier, viewModel: LoginViewModel) {
+
+    val email: String by viewModel.email.collectAsState()
+    val password: String by viewModel.password.collectAsState()
+    val loginEnable: Boolean by viewModel.loginEnable.collectAsState()
+
     Column(modifier = modifier) {
         // Utiliza un Box para llenar el ancho disponible y centrar horizontalmente la imagen
         Box(modifier = Modifier.fillMaxWidth()) {
@@ -59,11 +63,11 @@ fun Login(modifier: Modifier) {
         //Espacio
         Spacer(modifier = Modifier.padding(16.dp))
         //Campo de texto para el Email
-        EmailField()
+        EmailField(email) { viewModel.onLoginChanged(it, password)}
         // Espacio
         Spacer(modifier = Modifier.padding(4.dp))
         //Campo de texto para el Password
-        PasswordField()
+        PasswordField(password) { viewModel.onLoginChanged(email, it)}
         //Espacio
         Spacer(modifier = Modifier.padding(4.dp))
         //Posibilidad de recuperar la password
@@ -71,14 +75,14 @@ fun Login(modifier: Modifier) {
         //Espacio
         Spacer(modifier = Modifier.padding(8.dp))
         //Boton de Login
-        LoginButton()
+        LoginButton(loginEnable) { viewModel.onLoginSelected() }
     }
 }
 
 @Composable
-fun LoginButton() {
+fun LoginButton(loginEnable: Boolean, onLoginSelected: () -> Unit) {
     Button(
-        onClick = { },
+        onClick = { onLoginSelected() },
         modifier = Modifier
             .fillMaxWidth()  // Ajusta el ancho al máximo disponible
             .height(50.dp)
@@ -88,7 +92,7 @@ fun LoginButton() {
             containerColor = Color.Black,
             disabledContainerColor = Color(0xFFF0EEEF),
             disabledContentColor = Color(0xFFF0EEEF)
-        ),
+        ), enabled = loginEnable,
         shape = RoundedCornerShape(4.dp) // Establece un borde menos redondeado
     ) {
         Text(text = "Iniciar sesión")
@@ -125,10 +129,11 @@ fun ForgotPassword(modifier: Modifier) {
 // Función Composable para el campo de correo electrónico
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun EmailField(){
+fun EmailField(email: String, onTextFieldChanged:(String) -> Unit){
+
     TextField(
-        value = "", // Valor inicial del campo de texto
-        onValueChange = {}, // Callback para manejar el cambio de valor
+        value = email, // Valor inicial del campo de texto
+        onValueChange = { onTextFieldChanged(it) }, // Callback para manejar el cambio de valor
         modifier = Modifier
             .fillMaxWidth() // Ajusta el ancho al máximo disponible
             .padding(start = 20.dp, end = 20.dp), // Aplica padding en los lados
@@ -147,10 +152,10 @@ fun EmailField(){
 // Función Composable para el campo de contraseña
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PasswordField(){
+fun PasswordField(password: String, onTextFieldChanged:(String) -> Unit){
     TextField(
-        value = "", // Valor inicial del campo de texto
-        onValueChange = { }, // Callback para manejar el cambio de valor
+        value = password, // Valor inicial del campo de texto
+        onValueChange = { onTextFieldChanged(it) }, // Callback para manejar el cambio de valor
         placeholder = { Text(text = "Password")}, // Texto de marcador de posición
         modifier = Modifier
             .fillMaxWidth() // Ajusta el ancho al máximo disponible
